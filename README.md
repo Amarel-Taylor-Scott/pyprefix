@@ -37,12 +37,15 @@ get a clean, typed symbol stream to work from.
 **Idempotent** (safe to re-run), **dunders exempt** (`__init__` etc. are never
 touched), **underscores preserved** (`_helper` → `py_function__helper`).
 
-## Three modes
+## Commands
 
 ```bash
 pyprefix check  ./src                 # lint conformance — exit 1 if violations (safe; CI-ready)
 pyprefix apply  ./src [--instances]   # rename to the standard, verified + rollback
 pyprefix map    ./src [--json m.json] # typed symbol map: each def + its references
+pyprefix viz    ./src [--format html|mermaid|dot] [-o g.html]   # visualize the symbol graph
+pyprefix find   Cart ./src            # every definition + reference of a symbol (exact)
+pyprefix stats  ./src                 # conformance % + kind counts + most-referenced
 pyprefix standard                     # print the convention
 ```
 
@@ -56,6 +59,40 @@ pyprefix standard                     # print the convention
   renamed module still executes to the same result).
 - **`map`** — the payoff: a typed symbol index (def + reference locations), exact
   because the names are typed.
+
+## Visualize & explore
+
+Typed names make the symbol graph **exact** — nodes are definitions (colored by
+kind), edges are *contains* (class→method), *calls*, and *uses* (→class). Export
+it three ways:
+
+- **`--format html`** — a self-contained, dependency-free interactive force graph
+  (drag nodes; opens offline in any browser).
+- **`--format mermaid`** — pastes into Markdown and renders inline on GitHub:
+
+```mermaid
+graph LR
+  n0[["py_class_Wallet"]]
+  n1>"py_method_deposit"]
+  n2("py_function_open_wallet")
+  n0 -.-> n1
+  n2 ==> n0
+  n2 --> n1
+```
+
+- **`--format dot`** — Graphviz (`dot -Tsvg g.dot -o g.svg`).
+
+And because every name is typed, `find` and `stats` are deterministic:
+
+```
+$ pyprefix find Wallet ./src
+py_class_Wallet  (class)
+  def  sample.py:4
+  ref  sample.py:14
+$ pyprefix stats ./src
+symbols: 4  ·  conformance: 100%  ·  violations: 0
+by kind: class:1, function:1, method:2
+```
 
 ## Scope & honesty
 
@@ -85,7 +122,9 @@ pyprefix/
   check.py      deterministic conformance linter
   codemod.py    position-guided rewrite + compile-verify + rollback
   codemap.py    typed symbol map (markdown + JSON)
-  cli.py        check / apply / map / standard
+  graph.py      symbol/reference graph → DOT / Mermaid / self-contained HTML
+  tools.py      find (locate a symbol's uses) + stats (conformance & metrics)
+  cli.py        check / apply / map / viz / find / stats / standard
 ```
 
 MIT. Stdlib-only.

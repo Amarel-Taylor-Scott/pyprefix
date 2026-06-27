@@ -9,7 +9,7 @@ need no symbol resolver.
     print(check.report(check.check_path("src")))
 """
 
-from . import standard, check, codemod, codemap, analyze
+from . import standard, check, codemod, codemap, analyze, graph, tools
 
-__all__ = ["standard", "check", "codemod", "codemap", "analyze"]
+__all__ = ["standard", "check", "codemod", "codemap", "analyze", "graph", "tools"]
 __version__ = "0.1.0"
